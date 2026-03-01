@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submit Event - ROTL</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .form-container {
+      max-width: 600px;
+      margin: 100px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    .video-upload-section {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+    .upload-options {
+      display: flex;
+      gap: 10px;
+      margin: 10px 0;
+    }
+    .upload-option {
+      flex: 1;
+      padding: 10px;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      text-align: center;
+      cursor: pointer;
+    }    .upload-option.selected {
+      border-color: #007bff;
+      background: #e7f3ff;
+    }
+    .btn-block {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .ranking-input:focus {
+      border-color: #007bff;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+    }
+    .filter-btn {
+      padding: 8px 15px;
+      border: 2px solid #007bff;
+      background: white;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .filter-btn.active {
+      background: #007bff;
+      color: white;
+    }
+    .rotl-member {
+      background: #d4edda;
+      border-left: 4px solid #28a745;
+    }
+    .other-member {
+      background: #f8f9fa;
+      border-left: 4px solid #6c757d;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="logo">📤 Submit Event Results</div>
+    <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+  </nav>
+
+  <div class="form-container">
+    <h2>🏆 Event Submission</h2>
+    <p style="color: #666; margin-bottom: 20px;">      Officers only: Submit event rankings for ROTL members
+    </p>
+
+    <form id="eventForm">
+      <!-- Event Type -->
+      <div class="form-group">
+        <label>Event Type:</label>
+        <select id="eventType" required>
+          <option value="">Select Event</option>
+          <option value="AR">Archipelago Raid (AR)</option>
+          <option value="IR">Island Raid (IR)</option>
+          <option value="GW">Extreme Showdown (GW)</option>
+          <option value="OTHER">Other Event</option>
+        </select>
+      </div>
+
+      <!-- Event Number/Name -->
+      <div class="form-group">
+        <label>Event # / Name:</label>
+        <input type="text" id="eventName" placeholder="e.g., AR #442" required>
+      </div>
+
+      <!-- Event Date -->
+      <div class="form-group">
+        <label>Event End Date:</label>
+        <input type="datetime-local" id="eventDate" required>
+      </div>
+
+      <!-- Structured Rankings Input -->
+      <div class="form-group">
+        <label>📊 Top 30 Rankings:</label>
+        
+        <!-- Paste from Screenshot Button -->
+        <button type="button" class="btn btn-secondary" onclick="showPasteModal()" style="margin-bottom: 15px; width: 100%;">
+          📋 Paste from Screenshot/Text
+        </button>
+
+        <!-- Paste Modal -->
+        <div id="pasteModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+          <div style="background: white; padding: 20px; border-radius: 10px; max-width: 500px; width: 90%;">
+            <h3>📋 Paste Rankings</h3>
+            <p style="color: #666; font-size: 14px;">Paste from screenshot, spreadsheet, or any text format</p>
+            <textarea id="pasteInput" rows="10" placeholder="Examples:
+1. ROTLsobaF = 30487862
+2. COZYFreakAnand 29100000
+VIPxTito77pas,123456789,28500000" style="width: 100%; margin: 10px 0; padding: 10px; font-family: monospace;"></textarea>
+            <div style="display: flex; gap: 10px;">
+              <button type="button" class="btn btn-primary" onclick="processPaste()" style="flex: 1;">✅ Import</button>
+              <button type="button" class="btn btn-secondary" onclick="hidePasteModal()" style="flex: 1;">❌ Cancel</button>
+            </div>          </div>
+        </div>
+        
+        <div style="background: #f8f9fa; border: 2px solid #007bff; border-radius: 8px; padding: 15px;">
+          
+          <!-- Input Grid -->
+          <div id="rankingsGrid" style="display: flex; flex-direction: column; gap: 10px;">
+            <!-- Rows added dynamically -->
+          </div>
+          
+          <!-- Add Button -->
+          <button type="button" class="btn btn-secondary" onclick="addRankingRow()" style="margin-top: 15px; width: 100%;">
+            ➕ Add Another Rank
+          </button>
+          
+          <!-- Instructions -->
+          <div style="margin-top: 15px; padding: 10px; background: white; border-radius: 5px; font-size: 13px;">
+            <strong>📝 How to use:</strong>
+            <ol style="margin: 5px 0; padding-left: 20px;">
+              <li>Type player name, press <kbd>Tab</kbd></li>
+              <li>Type points (auto-formats with commas)</li>
+              <li>Press <kbd>Enter</kbd> for next rank</li>
+            </ol>
+          </div>
+        </div>
+        
+        <!-- Filter Buttons -->
+        <div style="margin: 15px 0; display: flex; gap: 10px;">
+          <button type="button" class="filter-btn active" onclick="filterPreview('all')">All Players</button>
+          <button type="button" class="filter-btn" onclick="filterPreview('ROTL')">ROTL Only</button>
+          <button type="button" class="filter-btn" onclick="filterPreview('others')">Other Alliances</button>
+        </div>
+        
+        <!-- Live Preview -->
+        <div style="margin-top: 15px; background: #f8f9fa; padding: 15px; border-radius: 8px;">
+          <h4 style="margin-bottom: 10px;">📋 Preview (<span id="previewCount">0</span> members)</h4>
+          <div id="rankingsPreview" style="max-height: 300px; overflow-y: auto; font-size: 13px;">
+            <p style="color: #666;">Start adding rankings to see preview...</p>
+          </div>
+        </div>
+        
+        <input type="hidden" id="finalRankings" name="rankings">
+      </div>
+
+      <!-- Video Upload Section -->
+      <div class="video-upload-section">
+        <label>🎥 Event Highlights (Optional):</label>
+        
+        <div class="upload-options">
+          <div class="upload-option selected" onclick="selectUploadMethod('direct')">            📹 Direct Upload<br><small>(30 sec, 15MB)</small>
+          </div>
+          <div class="upload-option" onclick="selectUploadMethod('youtube')">
+            🔗 YouTube Link<br><small>(Unlimited)</small>
+          </div>
+        </div>
+
+        <!-- Direct Upload -->
+        <div id="directUploadSection">
+          <input type="file" id="videoFile" accept="video/*" style="margin: 10px 0;">
+          <input type="text" id="videoTitle" placeholder="Video title">
+          <textarea id="videoDescription" placeholder="Video description" rows="2" style="margin-top: 10px;"></textarea>
+        </div>
+
+        <!-- YouTube Embed -->
+        <div id="youtubeUploadSection" style="display: none;">
+          <input type="url" id="youtubeUrl" placeholder="https://youtube.com/watch?v=..." style="margin: 10px 0;">
+          <input type="text" id="ytVideoTitle" placeholder="Video title">
+          <textarea id="ytVideoDescription" placeholder="Video description" rows="2" style="margin-top: 10px;"></textarea>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block">📤 Submit Event</button>
+      <button type="button" class="btn btn-secondary btn-block" onclick="window.location.href='officer-panel.html'">← Back</button>
+    </form>
+  </div>
+
+  <script type="module">
+    import { auth, db } from './js/firebase-config.js';
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+    import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+    let currentUser = null;
+    let uploadMethod = 'direct';
+    let autoSaveTimer = null;
+    let rankingsData = [];
+    let currentRow = 0;
+    let parsedRankings = [];
+    let currentFilter = 'all';
+
+    // Check if officer
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const { query, where, getDocs } = await import("https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js");
+        const q = query(collection(db, "users"), where("__name__", "==", user.uid));
+        const snapshot = await getDocs(q);
+        
+        if (!snapshot.empty) {
+          const userData = snapshot.docs[0].data();
+          if (userData.role !== 'R4' && userData.role !== 'R5') {            alert('⛔ Officers only!');
+            window.location.href = 'dashboard.html';
+            return;
+          }
+          currentUser = userData;
+        }
+      } else {
+        window.location.href = 'login.html';
+      }
+    });
+
+    // Initialize first row on load
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        addRankingRow();
+      }, 500);
+    });
+
+    // Toggle upload method
+    window.selectUploadMethod = function(method) {
+      uploadMethod = method;
+      document.querySelectorAll('.upload-option').forEach(opt => {
+        opt.classList.remove('selected');
+      });
+      event.target.closest('.upload-option').classList.add('selected');
+      
+      if (method === 'direct') {
+        document.getElementById('directUploadSection').style.display = 'block';
+        document.getElementById('youtubeUploadSection').style.display = 'none';
+      } else {
+        document.getElementById('directUploadSection').style.display = 'none';
+        document.getElementById('youtubeUploadSection').style.display = 'block';
+      }
+    };
+
+    // Show paste modal
+    window.showPasteModal = function() {
+      document.getElementById('pasteModal').style.display = 'flex';
+      document.getElementById('pasteInput').focus();
+    };
+
+    // Hide paste modal
+    window.hidePasteModal = function() {
+      document.getElementById('pasteModal').style.display = 'none';
+    };
+
+    // Extract alliance tag from player name
+    function parsePlayerName(fullName) {
+      const alliancePatterns = [
+        /^(\[([A-Za-z0-9]+)\])(.+)$/,      // [ROTL]sobaF        /^([A-Z]{2,5})([A-Za-z0-9\s]+)$/,  // ROTLsobaF
+        /^([A-Z]{2,5})[\s_-]([A-Za-z0-9\s]+)$/ // ROTL sobaF
+      ];
+      
+      let alliance = 'Unknown';
+      let cleanName = fullName;
+      
+      for (let pattern of alliancePatterns) {
+        const match = fullName.match(pattern);
+        if (match) {
+          if (pattern.toString().includes('[')) {
+            alliance = match[2];
+            cleanName = match[3];
+          } else {
+            alliance = match[1];
+            cleanName = match[2] || match[3];
+          }
+          break;
+        }
+      }
+      
+      return {
+        fullName: fullName,
+        alliance: alliance.toUpperCase(),
+        cleanName: cleanName.trim(),
+        isROTL: alliance.toUpperCase() === 'ROTL'
+      };
+    }
+
+    // Process pasted text
+    window.processPaste = function() {
+      const text = document.getElementById('pasteInput').value;
+      const lines = text.split('\n').filter(line => line.trim());
+      
+      let imported = 0;
+      
+      lines.forEach((line, index) => {
+        let match;
+        let name = '';
+        let points = '';
+        
+        // Format 1: "1. Username = 30487862"
+        match = line.match(/^(\d+)?\.?\s*([^\d=]+?)\s*[=:-]?\s*(\d+)/);
+        if (match) {
+          name = match[2].trim();
+          points = match[3];
+        }
+        
+        // Format 2: "Username 30487862"
+        if (!name) {          match = line.match(/^([A-Za-z0-9_\s]+?)\s+(\d{6,})$/);
+          if (match) {
+            name = match[1].trim();
+            points = match[2];
+          }
+        }
+        
+        // Format 3: CSV
+        if (!name) {
+          const parts = line.split(',');
+          if (parts.length >= 3) {
+            name = parts[0].trim();
+            points = parts[2].trim();
+          }
+        }
+        
+        if (name && points) {
+          currentRow++;
+          const playerInfo = parsePlayerName(name);
+          
+          rankingsData.push({
+            rowNum: currentRow,
+            fullName: playerInfo.fullName,
+            inGameName: playerInfo.cleanName,
+            alliance: playerInfo.alliance,
+            isROTL: playerInfo.isROTL,
+            points: parseInt(points.replace(/,/g, '')),
+            rank: 0
+          });
+          imported++;
+        }
+      });
+      
+      // Sort and assign ranks
+      rankingsData.sort((a, b) => b.points - a.points);
+      rankingsData.forEach((r, i) => r.rank = i + 1);
+      
+      updatePreview();
+      hidePasteModal();
+      alert(`✅ Imported ${imported} rankings!`);
+      document.getElementById('pasteInput').value = '';
+    };
+
+    // Add a new ranking row
+    window.addRankingRow = function() {
+      currentRow++;
+      const grid = document.getElementById('rankingsGrid');
+      
+      const row = document.createElement('div');
+      row.className = 'ranking-row';      row.style.cssText = 'display: flex; gap: 10px; align-items: center; animation: slideIn 0.3s ease;';
+      
+      row.innerHTML = `
+        <div style="flex: 1;">
+          <input 
+            type="text" 
+            id="name${currentRow}" 
+            placeholder="Player Name" 
+            class="ranking-input"
+            style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px;"
+            onfocus="this.placeholder=''"
+            onblur="this.placeholder='Player Name'"
+            onkeydown="handleNameKey(event, ${currentRow})"
+            onchange="updatePlayerAlliance(${currentRow})"
+          >
+        </div>
+        <div style="flex: 1;">
+          <input 
+            type="text" 
+            id="points${currentRow}" 
+            placeholder="Points" 
+            class="ranking-input"
+            style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px;"
+            onfocus="this.placeholder=''"
+            onblur="this.placeholder='Points'"
+            oninput="formatPoints(${currentRow})"
+            onkeydown="handlePointsKey(event, ${currentRow})"
+          >
+        </div>
+        <button type="button" onclick="removeRankingRow(${currentRow})" style="padding: 10px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;">
+          🗑️
+        </button>
+      `;
+      
+      grid.appendChild(row);
+      
+      setTimeout(() => {
+        document.getElementById(`name${currentRow}`).focus();
+      }, 100);
+      
+      updatePreview();
+    };
+
+    // Update player alliance when name changes
+    window.updatePlayerAlliance = function(rowNum) {
+      const nameInput = document.getElementById(`name${rowNum}`);
+      const playerInfo = parsePlayerName(nameInput.value);
+      
+      const existingIndex = rankingsData.findIndex(r => r.rowNum === rowNum);
+      if (existingIndex >= 0) {        rankingsData[existingIndex].fullName = playerInfo.fullName;
+        rankingsData[existingIndex].inGameName = playerInfo.cleanName;
+        rankingsData[existingIndex].alliance = playerInfo.alliance;
+        rankingsData[existingIndex].isROTL = playerInfo.isROTL;
+      }
+      
+      updatePreview();
+    };
+
+    // Remove a row
+    window.removeRankingRow = function(rowNum) {
+      const row = document.querySelector(`#name${rowNum}`).closest('.ranking-row');
+      row.remove();
+      rankingsData = rankingsData.filter(r => r.rowNum !== rowNum);
+      updatePreview();
+    };
+
+    // Handle key in name field
+    window.handleNameKey = function(event, rowNum) {
+      if (event.key === 'Tab') {
+        event.preventDefault();
+        document.getElementById(`points${rowNum}`).focus();
+      } else if (event.key === 'Enter') {
+        event.preventDefault();
+        saveRowData(rowNum);
+        addRankingRow();
+      }
+    };
+
+    // Handle key in points field
+    window.handlePointsKey = function(event, rowNum) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        saveRowData(rowNum);
+        addRankingRow();
+      } else if (event.key === 'Tab' && !event.shiftKey) {
+        const nextRow = rowNum + 1;
+        if (document.getElementById(`name${nextRow}`)) {
+          event.preventDefault();
+          document.getElementById(`name${nextRow}`).focus();
+        }
+      }
+    };
+
+    // Format points with commas
+    window.formatPoints = function(rowNum) {
+      const input = document.getElementById(`points${rowNum}`);
+      let value = input.value.replace(/[^0-9]/g, '');
+      
+      if (value) {        value = parseInt(value).toLocaleString('en-US');
+        input.value = value;
+      }
+      
+      saveRowData(rowNum);
+      updatePreview();
+      triggerAutoSave();
+    };
+
+    // Save row data
+    function saveRowData(rowNum) {
+      const nameInput = document.getElementById(`name${rowNum}`);
+      const pointsInput = document.getElementById(`points${rowNum}`);
+      
+      const name = nameInput.value.trim();
+      const points = parseInt(pointsInput.value.replace(/,/g, '')) || 0;
+      
+      if (!name || points === 0) return;
+      
+      const playerInfo = parsePlayerName(name);
+      const existingIndex = rankingsData.findIndex(r => r.rowNum === rowNum);
+      
+      const entry = {
+        rowNum: rowNum,
+        fullName: playerInfo.fullName,
+        inGameName: playerInfo.cleanName,
+        alliance: playerInfo.alliance,
+        isROTL: playerInfo.isROTL,
+        points: points,
+        rank: 0
+      };
+      
+      if (existingIndex >= 0) {
+        rankingsData[existingIndex] = entry;
+      } else {
+        rankingsData.push(entry);
+      }
+      
+      rankingsData.sort((a, b) => b.points - a.points);
+      rankingsData.forEach((r, i) => r.rank = i + 1);
+    }
+
+    // Filter preview
+    window.filterPreview = function(filter) {
+      currentFilter = filter;
+      
+      // Update active button
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });      event.target.classList.add('active');
+      
+      updatePreview();
+    };
+
+    // Update preview
+    function updatePreview() {
+      const count = document.getElementById('previewCount');
+      const preview = document.getElementById('rankingsPreview');
+      
+      // Filter data
+      let filteredData = rankingsData;
+      if (currentFilter === 'ROTL') {
+        filteredData = rankingsData.filter(r => r.isROTL);
+      } else if (currentFilter === 'others') {
+        filteredData = rankingsData.filter(r => !r.isROTL);
+      }
+      
+      count.innerText = filteredData.length;
+      
+      // Count stats
+      const rotlCount = rankingsData.filter(r => r.isROTL).length;
+      const otherCount = rankingsData.length - rotlCount;
+      
+      if (filteredData.length === 0) {
+        preview.innerHTML = '<p style="color: #666;">No players to show.</p>';
+        return;
+      }
+      
+      let html = '<table style="width: 100%; border-collapse: collapse;">';
+      html += '<tr style="background: #007bff; color: white;"><th style="padding: 8px;">#</th><th>Name</th><th>Alliance</th><th style="text-align: right;">Points</th></tr>';
+      
+      filteredData.forEach(r => {
+        const rowClass = r.isROTL ? 'rotl-member' : 'other-member';
+        const allianceBadge = r.isROTL ? '✅ ROTL' : r.alliance;
+        
+        html += `<tr class="${rowClass}" style="border-bottom: 1px solid #ddd;">`;
+        html += '<td style="padding: 8px; font-weight: bold;">' + r.rank + '</td>';
+        html += '<td style="padding: 8px;">' + r.inGameName + '</td>';
+        html += '<td style="padding: 8px;"><strong>' + allianceBadge + '</strong></td>';
+        html += '<td style="padding: 8px; text-align: right;">' + r.points.toLocaleString() + '</td>';
+        html += '</tr>';
+      });
+      
+      html += '</table>';
+      
+      // Add summary
+      html += '<div style="margin-top: 15px; padding: 10px; background: #e7f3ff; border-radius: 5px;">';
+      html += '<strong>📊 Summary:</strong><br>';
+      html += `• ROTL Members: ${rotlCount}<br>`;      html += `• Other Alliances: ${otherCount}<br>`;
+      html += `• Total Players: ${rankingsData.length}`;
+      html += '</div>';
+      
+      preview.innerHTML = html;
+      
+      document.getElementById('finalRankings').value = JSON.stringify(rankingsData);
+      parsedRankings = rankingsData;
+    }
+
+    // Auto-save
+    function triggerAutoSave() {
+      clearTimeout(autoSaveTimer);
+      autoSaveTimer = setTimeout(() => {
+        localStorage.setItem('draftRankings', JSON.stringify(rankingsData));
+      }, 2000);
+    }
+
+    // Form submission
+    document.getElementById('eventForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const eventType = document.getElementById('eventType').value;
+      const eventName = document.getElementById('eventName').value;
+      const eventDate = document.getElementById('eventDate').value;
+
+      if (rankingsData.length === 0) {
+        alert('❌ Please add at least 1 ranking!');
+        return;
+      }
+
+      try {
+        const eventData = {
+          eventType: eventType,
+          eventName: eventName,
+          eventDate: eventDate,
+          rankings: rankingsData,
+          rotlMembers: rankingsData.filter(r => r.isROTL),
+          otherAlliances: rankingsData.filter(r => !r.isROTL),
+          submittedBy: currentUser.inGameName || currentUser.email,
+          submittedByUid: auth.currentUser.uid,
+          submittedAt: serverTimestamp(),
+          allianceId: 'ROTL',
+          status: 'published',
+          videos: []
+        };
+
+        if (uploadMethod === 'direct' && document.getElementById('videoFile').files[0]) {
+          eventData.videos.push({
+            type: 'direct',
+            title: document.getElementById('videoTitle').value || 'Event Highlight',            description: document.getElementById('videoDescription').value || '',
+            status: 'pending_upload'
+          });
+        } else if (uploadMethod === 'youtube' && document.getElementById('youtubeUrl').value) {
+          eventData.videos.push({
+            type: 'youtube',
+            url: document.getElementById('youtubeUrl').value,
+            title: document.getElementById('ytVideoTitle').value || 'Event Highlight',
+            description: document.getElementById('ytVideoDescription').value || ''
+          });
+        }
+
+        await addDoc(collection(db, "events"), eventData);
+        localStorage.removeItem('draftRankings');
+        alert('✅ Event submitted successfully!');
+        window.location.href = 'officer-panel.html';
+      } catch (error) {
+        alert('Error: ' + error.message);
+        console.error(error);
+      }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      signOut(auth).then(() => window.location.href = 'index.html');
+    });
+  </script>
+</body>
+</html>

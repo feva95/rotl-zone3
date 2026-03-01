@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile - Server 84</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .profile-container {
+      max-width: 800px;
+      margin: 80px auto 20px;
+      padding: 20px;
+    }
+    
+    /* Accordion/Collapsible Sections */
+    .accordion {
+      background: white;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    
+    .accordion-header {
+      padding: 20px;
+      background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+      color: white;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+    
+    .accordion-header:hover {
+      background: linear-gradient(135deg, #0056b3 0%, #004494 100%);
+    }
+    
+    .accordion-header.active {
+      background: linear-gradient(135deg, #0056b3 0%, #004494 100%);
+    }
+    
+    .accordion-icon {
+      font-size: 20px;
+      transition: transform 0.3s;
+    }
+    
+    .accordion-header.active .accordion-icon {      transform: rotate(180deg);
+    }
+    
+    .accordion-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+      background: #f8f9fa;
+    }
+    
+    .accordion-body.show {
+      max-height: 2000px; /* Large enough to fit content */
+    }
+    
+    .accordion-content {
+      padding: 20px;
+    }
+    
+    /* Wallet Grid */
+    .wallet-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+    .currency-card {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      border-top: 4px solid #ccc;
+    }
+    .currency-card.lily { border-color: #ff69b4; }
+    .currency-card.bronze { border-color: #cd7f32; }
+    .currency-card.silver { border-color: #c0c0c0; }
+    .currency-card.gold { border-color: #ffd700; }
+    .currency-card.coin { border-color: #9b59b6; }
+    
+    .currency-amount {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    .currency-label {
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+    }
+        /* Stats */
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #ddd;
+    }
+    .stat-row:last-child { border-bottom: none; }
+    
+    /* Badges */
+    .badges-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+    .badge-item {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .badge-icon {
+      font-size: 40px;
+      display: block;
+      margin-bottom: 8px;
+    }
+    .badge-item.locked {
+      opacity: 0.4;
+    }
+    
+    /* Settings */
+    .setting-item {
+      margin: 20px 0;
+      padding: 15px;
+      background: white;
+      border-radius: 8px;
+    }
+    .setting-label {
+      font-weight: bold;
+      margin-bottom: 10px;
+      display: block;
+    }
+    .pin-input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      text-align: center;      font-size: 24px;
+      letter-spacing: 10px;
+      margin: 10px 0;
+    }
+    
+    .btn {
+      padding: 12px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      border: none;
+      font-size: 16px;
+      margin: 5px 0;
+    }
+    .btn-primary { background: #007bff; color: white; }
+    .btn-secondary { background: #6c757d; color: white; }
+    .btn-danger { background: #dc3545; color: white; }
+    .btn-block { width: 100%; }
+    
+    /* Alert */
+    .alert {
+      padding: 15px;
+      border-radius: 5px;
+      margin: 10px 0;
+      animation: slideIn 0.3s ease;
+    }
+    .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Profile Header */
+    .profile-header {
+      background: linear-gradient(135deg, #1a1a1a 0%, #2c3e50 100%);
+      border-radius: 15px;
+      padding: 30px;
+      text-align: center;
+      color: white;
+      margin-bottom: 20px;
+    }
+    .profile-avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: 4px solid #007bff;
+      background: #fff;
+      margin: 0 auto 15px;
+      display: flex;
+      align-items: center;      justify-content: center;
+      font-size: 40px;
+    }
+    .profile-rank {
+      background: #007bff;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: bold;
+      display: inline-block;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="logo" id="allianceLogo">Loading...</div>
+    <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+  </nav>
+
+  <div class="profile-container">
+    
+    <!-- Profile Header (Always Visible) -->
+    <div class="profile-header">
+      <div class="profile-avatar">👤</div>
+      <h2 id="profileName">Loading...</h2>
+      <p id="profileAlliance">Alliance: Loading...</p>
+      <div class="profile-rank" id="profileRank">R0 - Enrollment</div>
+      <p style="margin-top: 10px; font-size: 14px; opacity: 0.8;">
+        ID: <span id="profileId">...</span>
+      </p>
+    </div>
+
+    <!-- Alert Box -->
+    <div id="alertBox"></div>
+
+    <!-- Accordion Sections -->
+
+    <!-- 1. Wallet Section -->
+    <div class="accordion">
+      <div class="accordion-header" onclick="toggleAccordion(this)">
+        <span>💰 My Wallet</span>
+        <span class="accordion-icon">▼</span>
+      </div>
+      <div class="accordion-body">
+        <div class="accordion-content">
+          <div class="wallet-grid">
+            <div class="currency-card lily">
+              <div class="currency-label">🌸 Lilies</div>              <div class="currency-amount" id="lilyCount">0</div>
+            </div>
+            <div class="currency-card bronze">
+              <div class="currency-label">🥉 Bronze</div>
+              <div class="currency-amount" id="bronzeCount">0</div>
+            </div>
+            <div class="currency-card silver">
+              <div class="currency-label">🪙 Silver</div>
+              <div class="currency-amount" id="silverCount">0</div>
+            </div>
+            <div class="currency-card gold">
+              <div class="currency-label">🥇 Gold</div>
+              <div class="currency-amount" id="goldCount">0</div>
+            </div>
+            <div class="currency-card coin">
+              <div class="currency-label">🪙 ROTL Coin</div>
+              <div class="currency-amount" id="coinCount">0</div>
+            </div>
+          </div>
+          <button class="btn btn-danger btn-block" onclick="addDevCurrency()" style="margin-top: 20px;">
+            🔧 DEV: Add Test Currency
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Game Stats Section -->
+    <div class="accordion">
+      <div class="accordion-header" onclick="toggleAccordion(this)">
+        <span>🎮 Game Stats</span>
+        <span class="accordion-icon">▼</span>
+      </div>
+      <div class="accordion-body">
+        <div class="accordion-content">
+          <div class="stat-row">
+            <span>⚔️ Might</span>
+            <strong id="statMight">Not set</strong>
+          </div>
+          <div class="stat-row">
+            <span>💀 Kills</span>
+            <strong id="statKills">Not set</strong>
+          </div>
+          <div class="stat-row">
+            <span>📅 Join Date</span>
+            <strong id="statJoinDate">-</strong>
+          </div>
+          <div class="stat-row">
+            <span>🔥 Login Streak</span>
+            <strong id="statStreak">0 days</strong>
+          </div>        </div>
+      </div>
+    </div>
+
+    <!-- 3. Badges Section -->
+    <div class="accordion">
+      <div class="accordion-header" onclick="toggleAccordion(this)">
+        <span>🏆 Badges & Achievements</span>
+        <span class="accordion-icon">▼</span>
+      </div>
+      <div class="accordion-body">
+        <div class="accordion-content">
+          <div class="badges-grid">
+            <div class="badge-item">
+              <span class="badge-icon">🌱</span>
+              <span>Newcomer</span>
+            </div>
+            <div class="badge-item locked">
+              <span class="badge-icon">🦋</span>
+              <span>Social</span>
+            </div>
+            <div class="badge-item locked">
+              <span class="badge-icon">🏆</span>
+              <span>War Hero</span>
+            </div>
+            <div class="badge-item locked">
+              <span class="badge-icon">💎</span>
+              <span>VIP</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Settings Section -->
+    <div class="accordion">
+      <div class="accordion-header" onclick="toggleAccordion(this)">
+        <span>⚙️ Account Settings</span>
+        <span class="accordion-icon">▼</span>
+      </div>
+      <div class="accordion-body">
+        <div class="accordion-content">
+          
+          <!-- PIN Setting -->
+          <div class="setting-item">
+            <label class="setting-label">🔐 4-Digit PIN:</label>
+            <input type="password" id="pinInput" maxlength="4" placeholder="Enter PIN" class="pin-input">
+            <button class="btn btn-primary btn-block" onclick="setPIN()">Save PIN</button>
+            <p style="font-size: 12px; color: #666; margin-top: 5px;">
+              Use this PIN for quick actions and security verification            </p>
+          </div>
+          
+          <!-- Password Reset -->
+          <div class="setting-item">
+            <label class="setting-label">📧 Change Password:</label>
+            <button class="btn btn-secondary btn-block" onclick="resetPassword()">
+              Send Password Reset Email
+            </button>
+          </div>
+          
+          <!-- Logout -->
+          <div class="setting-item">
+            <label class="setting-label">🚪 Logout:</label>
+            <button class="btn btn-danger btn-block" onclick="logout()">
+              Logout from all devices
+            </button>
+          </div>
+
+          <!-- Back Button -->
+          <button class="btn btn-secondary btn-block" onclick="window.location.href='dashboard.html'">
+            ← Back to Dashboard
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { auth, db } from './js/firebase-config.js';
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+    import { doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+    let currentUserUid = null;
+    let currentUserData = null;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUserUid = user.uid;
+        await loadProfile(user);
+      } else {
+        window.location.href = 'login.html';
+      }
+    });
+
+    // Toggle accordion
+    window.toggleAccordion = function(header) {
+      const body = header.nextElementSibling;
+      const isActive = header.classList.contains('active');      
+      // Close all accordions
+      document.querySelectorAll('.accordion-header').forEach(h => {
+        h.classList.remove('active');
+        h.nextElementSibling.classList.remove('show');
+      });
+      
+      // Open clicked one if it wasn't active
+      if (!isActive) {
+        header.classList.add('active');
+        body.classList.add('show');
+      }
+    };
+
+    async function loadProfile(user) {
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      
+      if (userDoc.exists()) {
+        const data = userDoc.data();
+        currentUserData = data;
+        
+        // Profile Header
+        document.getElementById('profileName').innerText = data.inGameName || user.email;
+        document.getElementById('profileAlliance').innerText = `Alliance: ${data.allianceId}`;
+        document.getElementById('allianceLogo').innerText = `${data.allianceId} Zone-3`;
+        document.getElementById('profileRank').innerText = `${data.role} - ${getRoleName(data.role)}`;
+        document.getElementById('profileId').innerText = data.playerId || 'Not set';
+        
+        // Wallet
+        document.getElementById('lilyCount').innerText = data.lilies || 0;
+        document.getElementById('bronzeCount').innerText = data.bronze || 0;
+        document.getElementById('silverCount').innerText = formatCurrency(data.silver || 0);
+        document.getElementById('goldCount').innerText = `${data.gold || 0}G`;
+        document.getElementById('coinCount').innerText = data.allianceCoins || 0;
+        
+        // Stats
+        document.getElementById('statMight').innerText = data.might || 'Not set';
+        document.getElementById('statKills').innerText = data.kills || 'Not set';
+        document.getElementById('statJoinDate').innerText = new Date(data.createdAt).toLocaleDateString();
+        document.getElementById('statStreak').innerText = `${data.websiteLogins || 0} logins`;
+      }
+    }
+
+    function formatCurrency(amount) {
+      const goldValue = amount / 100;
+      return `${goldValue.toFixed(2)}G`;
+    }
+
+    function getRoleName(role) {
+      const roles = {        'R0': 'Enrollment',
+        'R1': 'Recruit',
+        'R2': 'Member',
+        'R3': 'Veteran',
+        'R4': 'Officer',
+        'R5': 'Leader'
+      };
+      return roles[role] || role;
+    }
+
+    // DEV MODE: Add fake currency
+    window.addDevCurrency = async function() {
+      if (!currentUserUid) return;
+      
+      const userRef = doc(db, "users", currentUserUid);
+      await updateDoc(userRef, {
+        lilies: increment(50),
+        bronze: increment(100),
+        silver: increment(250),
+        gold: increment(15),
+        allianceCoins: increment(2)
+      });
+      
+      showAlert('✅ Dev Currency Added! Refreshing...', 'success');
+      setTimeout(() => location.reload(), 1500);
+    };
+
+    // Set PIN
+    window.setPIN = async function() {
+      const pin = document.getElementById('pinInput').value;
+      if (pin.length !== 4 || !/^\d+$/.test(pin)) {
+        showAlert('❌ PIN must be 4 digits', 'error');
+        return;
+      }
+      
+      try {
+        await updateDoc(doc(db, "users", currentUserUid), { pin: pin });
+        showAlert('✅ PIN set successfully!', 'success');
+        document.getElementById('pinInput').value = '';
+      } catch (error) {
+        showAlert('❌ Error: ' + error.message, 'error');
+      }
+    };
+
+    // Reset Password
+    window.resetPassword = async function() {
+      const { sendPasswordResetEmail } = await import("https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js");
+      
+      try {
+        await sendPasswordResetEmail(auth, auth.currentUser.email);        showAlert('✅ Password reset email sent!', 'success');
+      } catch (error) {
+        showAlert('❌ Error: ' + error.message, 'error');
+      }
+    };
+
+    // Logout
+    window.logout = function() {
+      localStorage.removeItem('rememberMe');
+      localStorage.removeItem('userEmail');
+      signOut(auth).then(() => window.location.href = 'index.html');
+    };
+
+    // Alert function with auto-close
+    function showAlert(message, type) {
+      const alertBox = document.getElementById('alertBox');
+      alertBox.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+      
+      setTimeout(() => {
+        alertBox.innerHTML = '';
+      }, 5000);
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      signOut(auth).then(() => window.location.href = 'index.html');
+    });
+  </script>
+</body>
+</html>
