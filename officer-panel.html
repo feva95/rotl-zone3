@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Officer Panel - ROTL</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .officer-container {
+      max-width: 1200px;
+      margin: 100px auto;
+      padding: 20px;
+    }
+    .pending-card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 15px;
+      border-left: 4px solid #ffc107;
+    }
+    .verified-card {
+      border-left: 4px solid #28a745;
+    }
+    .rejected-card {
+      border-left: 4px solid #dc3545;
+    }
+    .code-display {
+      background: #f8f9fa;
+      padding: 10px 15px;
+      border-radius: 5px;
+      font-family: monospace;
+      font-size: 18px;
+      font-weight: bold;
+      display: inline-block;
+      margin: 10px 0;
+    }
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    .btn-approve {
+      background: #28a745;
+      color: white;
+    }
+    .btn-reject {
+      background: #dc3545;
+      color: white;
+    }    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    .stat-card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .stat-number {
+      font-size: 32px;
+      font-weight: bold;
+      color: #007bff;
+    }
+    .filter-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .tab {
+      padding: 10px 20px;
+      background: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .tab.active {
+      background: #007bff;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="logo">🛡️ Officer Panel - ROTL</div>
+    <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+  </nav>
+
+  <div class="officer-container">
+    <h1>Officer Approval Panel</h1>
+    <p>Review and approve new member applications</p>
+    <a href="submit-event.html" class="btn btn-primary" style="margin: 20px 0; display: inline-block;">
+  📤 Submit Event Results
+</a>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">        <div class="stat-number" id="pendingCount">0</div>
+        <div>Pending Approvals</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="approvedToday">0</div>
+        <div>Approved Today</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="totalMembers">0</div>
+        <div>Total Members</div>
+      </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+      <button class="tab active" onclick="filterUsers('pending')">Pending</button>
+      <button class="tab" onclick="filterUsers('all')">All Users</button>
+      <button class="tab" onclick="filterUsers('verified')">Verified</button>
+    </div>
+
+    <!-- Users List -->
+    <div id="usersList">
+      <p>Loading users...</p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth, db } from './js/firebase-config.js';
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+    import { collection, query, where, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+    let currentUser = null;
+    let currentFilter = 'pending';
+
+    // Check if user is officer (R4 or R5)
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const userDoc = await getDocs(query(collection(db, "users"), where("__name__", "==", user.uid)));
+        
+        if (!userDoc.empty) {
+          const userData = userDoc.docs[0].data();
+          
+          // Check if R4 or R5
+          if (userData.role !== 'R4' && userData.role !== 'R5') {
+            alert('⛔ Access Denied: Officer privileges required!');
+            window.location.href = 'dashboard.html';
+            return;
+          }
+          
+          currentUser = userData;          loadUsers();
+        }
+      } else {
+        window.location.href = 'login.html';
+      }
+    });
+
+    // Load users based on filter
+    async function loadUsers() {
+      const usersList = document.getElementById('usersList');
+      usersList.innerHTML = '<p>Loading users...</p>';
+
+      let usersQuery;
+      
+      if (currentFilter === 'pending') {
+        usersQuery = query(collection(db, "users"), 
+          where("allianceId", "==", currentUser.allianceId),
+          where("status", "==", "pending"));
+      } else {
+        usersQuery = query(collection(db, "users"), 
+          where("allianceId", "==", "ROTL"));
+      }
+
+      const snapshot = await getDocs(usersQuery);
+      
+      if (snapshot.empty) {
+        usersList.innerHTML = '<p>No users found.</p>';
+        return;
+      }
+
+      // Update stats
+      document.getElementById('pendingCount').innerText = 
+        snapshot.docs.filter(d => d.data().status === 'pending').length;
+      document.getElementById('totalMembers').innerText = snapshot.size;
+
+      // Display users
+      usersList.innerHTML = '';
+      snapshot.forEach(doc => {
+        const user = doc.data();
+        const userId = doc.id;
+        createUserCard(user, userId);
+      });
+    }
+
+    // Create user card
+    function createUserCard(user, userId) {
+      const usersList = document.getElementById('usersList');
+      
+      const card = document.createElement('div');
+      card.className = `pending-card ${user.status === 'verified' ? 'verified-card' : ''}`;      
+      card.innerHTML = `
+        <h3>${user.inGameName || 'Unknown'}</h3>
+        <p><strong>Email:</strong> ${user.email}</p>
+        <p><strong>Commander ID:</strong> ${user.playerId || 'Not set'}</p>
+        <p><strong>Role Claimed:</strong> ${user.roleClaim || 'Not set'}</p>
+        <p><strong>Current Rank:</strong> ${user.role}</p>
+        <p><strong>Status:</strong> ${user.status}</p>
+        
+        ${user.verificationCode ? `
+          <div class="code-display">🔑 ${user.verificationCode}</div>
+        ` : ''}
+        
+        ${user.codeExpiresAt ? `
+          <p><small>Code expires: ${new Date(user.codeExpiresAt).toLocaleString()}</small></p>
+        ` : ''}
+        
+        ${user.status === 'pending' ? `
+          <div class="btn-group">
+            <button class="btn btn-approve" onclick="approveUser('${userId}', '${user.email}')">
+              ✅ Approve to ${user.roleClaim || 'R1'}
+            </button>
+            <button class="btn btn-reject" onclick="rejectUser('${userId}')">
+              ❌ Reject
+            </button>
+          </div>
+        ` : ''}
+        
+        <p style="margin-top: 10px; font-size: 12px; color: #666;">
+          Joined: ${new Date(user.createdAt).toLocaleString()}
+        </p>
+      `;
+      
+      usersList.appendChild(card);
+    }
+
+    // Approve user
+    window.approveUser = async function(userId, email) {
+      if (!confirm(`Approve ${email} and grant them access?`)) return;
+
+      try {
+        const userRef = doc(db, "users", userId);
+        await updateDoc(userRef, {
+          status: "verified",
+          role: "R1", // Or use their claimed role
+          verifiedAt: new Date().toISOString(),
+          verifiedBy: currentUser.inGameName || currentUser.email
+        });
+
+        alert(`✅ User ${email} approved successfully!`);        loadUsers(); // Refresh list
+      } catch (error) {
+        alert('Error approving user: ' + error.message);
+      }
+    };
+
+    // Reject user
+    window.rejectUser = async function(userId) {
+      const reason = prompt("Reason for rejection (optional):");
+      if (reason === null) return; // Cancelled
+
+      try {
+        const userRef = doc(db, "users", userId);
+        await updateDoc(userRef, {
+          status: "rejected",
+          rejectionReason: reason || "Not specified",
+          rejectedAt: new Date().toISOString()
+        });
+
+        alert('❌ User rejected');
+        loadUsers(); // Refresh list
+      } catch (error) {
+        alert('Error rejecting user: ' + error.message);
+      }
+    };
+
+    // Filter users
+    window.filterUsers = function(filter) {
+      currentFilter = filter;
+      
+      // Update active tab
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      event.target.classList.add('active');
+      
+      loadUsers();
+    };
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      signOut(auth).then(() => window.location.href = 'index.html');
+    });
+  </script>
+</body>
+</html>
