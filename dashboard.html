@@ -7,16 +7,22 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+
+  <!-- Navbar -->
   <nav class="navbar">
     <div class="logo">Server 84</div>
     <button onclick="logout()" class="btn btn-secondary">Logout</button>
   </nav>
 
+  <!-- Dashboard Container -->
   <div class="dashboard-container">
+    
+    <!-- Welcome Header -->
     <div class="welcome-header">
       <h1>Welcome, Commander!</h1>
     </div>
 
+    <!-- Account Status Card -->
     <div class="status-card">
       <h2>📋 Account Status</h2>
       <div class="status-info">
@@ -42,12 +48,32 @@
         </div>
       </div>
     </div>
-
+    <!-- Verified Badge -->
     <div class="verified-badge">
       <h2>✅ Account Verified!</h2>
       <p>Welcome to the alliance! You now have full access to all features.</p>
       <a href="alliance-dashboard.html" class="cta-button">Go to Alliance Dashboard</a>
     </div>
+
+    <!-- Quick Actions -->
+    <div class="alliance-dashboard">
+      <div class="dashboard-card" onclick="window.location.href='profile.html'">
+        <div class="icon">👤</div>
+        <h3>My Profile</h3>
+        <p>View your stats and settings</p>
+      </div>
+      <div class="dashboard-card" onclick="window.location.href='event-leaderboard.html'">
+        <div class="icon">🏆</div>
+        <h3>Leaderboard</h3>
+        <p>Check event rankings</p>
+      </div>
+      <div class="dashboard-card" onclick="window.location.href='submit-event.html'">
+        <div class="icon">📊</div>
+        <h3>Submit Event</h3>
+        <p>Report event results</p>
+      </div>
+    </div>
+
   </div>
 
   <script type="module">
@@ -55,28 +81,50 @@
     import { signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
     import { doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
+    // Load user data
     auth.onAuthStateChanged(async (user) => {
       if (user) {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists()) {
-          const data = userDoc.data();
-          document.getElementById('userEmail').textContent = user.email;
-          document.getElementById('userAlliance').textContent = data.allianceId || 'N/A';
-          document.getElementById('userIgn').textContent = data.inGameName || 'N/A';
-          document.getElementById('userRank').textContent = `${data.role} - ${getRoleName(data.role)}`;
-          document.getElementById('userStatus').textContent = data.status === 'verified' ? '✅ Verified' : '⏳ Pending Verification';
+        try {
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          if (userDoc.exists()) {
+            const data = userDoc.data();
+            document.getElementById('userEmail').textContent = user.email;
+            document.getElementById('userAlliance').textContent = data.allianceId || 'N/A';
+            document.getElementById('userIgn').textContent = data.inGameName || 'Not set';
+            document.getElementById('userRank').textContent = `${data.role} - ${getRoleName(data.role)}`;
+            document.getElementById('userStatus').textContent = data.status === 'verified' ? '✅ Verified' : '⏳ Pending Verification';
+          } else {
+            console.error('No user data found');
+          }
+        } catch (error) {          console.error('Error loading user data:', error);
         }
+      } else {
+        window.location.href = 'login.html';
       }
     });
 
+    // Get role name
     function getRoleName(role) {
-      const roles = { 'R0': 'Enrollment', 'R1': 'Recruit', 'R2': 'Member', 'R3': 'Veteran', 'R4': 'Officer', 'R5': 'Leader' };
+      const roles = {
+        'R0': 'Enrollment',
+        'R1': 'Recruit',
+        'R2': 'Member',
+        'R3': 'Veteran',
+        'R4': 'Officer',
+        'R5': 'Leader'
+      };
       return roles[role] || role;
     }
 
-    window.logout = () => {
-      signOut(auth).then(() => window.location.href = 'index.html');
+    // Logout function
+    window.logout = function() {
+      signOut(auth).then(() => {
+        window.location.href = 'index.html';
+      }).catch((error) => {
+        alert('Error logging out: ' + error.message);
+      });
     };
   </script>
+
 </body>
-  </html> 
+</html>
