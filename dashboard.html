@@ -4,126 +4,123 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - Server 84</title>
-  <link rel="stylesheet" href="css/style.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+    body { background: linear-gradient(135deg, #1a0033 0%, #330066 100%); min-height: 100vh; color: #fff; }
+    .navbar { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); }
+    .navbar .logo { font-size: 24px; font-weight: bold; color: #00d9ff; }
+    .container { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
+    .welcome { text-align: center; margin-bottom: 40px; }
+    .welcome h1 { font-size: 42px; margin-bottom: 10px; text-shadow: 0 0 20px rgba(0,217,255,0.5); }
+    .card { background: rgba(255,255,255,0.08); border-radius: 15px; padding: 30px; margin: 20px 0; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+    .card h2 { color: #00d9ff; margin-bottom: 20px; font-size: 24px; }
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+    .info-item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border-left: 4px solid #00d9ff; }
+    .info-label { color: rgba(255,255,255,0.6); font-size: 14px; margin-bottom: 5px; }
+    .info-value { color: #fff; font-size: 18px; font-weight: 600; }
+    .verified { background: linear-gradient(135deg, #28a745, #20c997); padding: 25px; border-radius: 15px; text-align: center; margin: 30px 0; }
+    .verified h2 { font-size: 28px; margin-bottom: 10px; }
+    .verified p { font-size: 16px; opacity: 0.9; }
+    .btn { display: inline-block; background: linear-gradient(135deg, #00d9ff, #7b2cbf); color: #fff; padding: 15px 40px; border-radius: 10px; text-decoration: none; font-weight: 600; margin-top: 20px; transition: all 0.3s; }
+    .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,217,255,0.4); }
+    .btn-secondary { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 40px; }
+    .grid-card { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 30px; text-align: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.3s; }
+    .grid-card:hover { background: rgba(255,255,255,0.08); transform: translateY(-5px); border-color: #00d9ff; }
+    .grid-card .icon { font-size: 48px; margin-bottom: 15px; }
+    .grid-card h3 { color: #fff; font-size: 20px; margin-bottom: 10px; }
+    .grid-card p { color: rgba(255,255,255,0.6); font-size: 14px; }
+    @media (max-width: 768px) { .welcome h1 { font-size: 32px; } .info-grid, .grid { grid-template-columns: 1fr; } }
+  </style>
 </head>
 <body>
 
-  <!-- Navbar -->
   <nav class="navbar">
     <div class="logo">Server 84</div>
-    <button onclick="logout()" class="btn btn-secondary">Logout</button>
+    <button onclick="logout()" class="btn btn-secondary" style="padding: 10px 20px;">Logout</button>
   </nav>
 
-  <!-- Dashboard Container -->
-  <div class="dashboard-container">
-    
-    <!-- Welcome Header -->
-    <div class="welcome-header">
+  <div class="container">
+    <div class="welcome">
       <h1>Welcome, Commander!</h1>
     </div>
 
-    <!-- Account Status Card -->
-    <div class="status-card">
+    <div class="card">
       <h2>📋 Account Status</h2>
-      <div class="status-info">
-        <div class="status-item">
-          <div class="status-label">Email</div>
-          <div class="status-value" id="userEmail">Loading...</div>
+      <div class="info-grid">        <div class="info-item">
+          <div class="info-label">Email</div>
+          <div class="info-value" id="userEmail">Loading...</div>
         </div>
-        <div class="status-item">
-          <div class="status-label">Alliance</div>
-          <div class="status-value" id="userAlliance">Loading...</div>
+        <div class="info-item">
+          <div class="info-label">Alliance</div>
+          <div class="info-value" id="userAlliance">Loading...</div>
         </div>
-        <div class="status-item">
-          <div class="status-label">In-Game Name</div>
-          <div class="status-value" id="userIgn">Loading...</div>
+        <div class="info-item">
+          <div class="info-label">In-Game Name</div>
+          <div class="info-value" id="userIgn">Loading...</div>
         </div>
-        <div class="status-item">
-          <div class="status-label">Rank</div>
-          <div class="status-value" id="userRank">Loading...</div>
+        <div class="info-item">
+          <div class="info-label">Rank</div>
+          <div class="info-value" id="userRank">Loading...</div>
         </div>
-        <div class="status-item">
-          <div class="status-label">Status</div>
-          <div class="status-value" id="userStatus">⏳ Pending Verification</div>
+        <div class="info-item">
+          <div class="info-label">Status</div>
+          <div class="info-value" id="userStatus">⏳ Pending</div>
         </div>
       </div>
     </div>
-    <!-- Verified Badge -->
-    <div class="verified-badge">
+
+    <div class="verified">
       <h2>✅ Account Verified!</h2>
       <p>Welcome to the alliance! You now have full access to all features.</p>
-      <a href="alliance-dashboard.html" class="cta-button">Go to Alliance Dashboard</a>
+      <a href="alliance-dashboard.html" class="btn">Go to Alliance Dashboard</a>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="alliance-dashboard">
-      <div class="dashboard-card" onclick="window.location.href='profile.html'">
+    <div class="grid">
+      <div class="grid-card" onclick="window.location.href='profile.html'">
         <div class="icon">👤</div>
         <h3>My Profile</h3>
         <p>View your stats and settings</p>
       </div>
-      <div class="dashboard-card" onclick="window.location.href='event-leaderboard.html'">
+      <div class="grid-card" onclick="window.location.href='event-leaderboard.html'">
         <div class="icon">🏆</div>
         <h3>Leaderboard</h3>
         <p>Check event rankings</p>
       </div>
-      <div class="dashboard-card" onclick="window.location.href='submit-event.html'">
+      <div class="grid-card" onclick="window.location.href='submit-event.html'">
         <div class="icon">📊</div>
         <h3>Submit Event</h3>
         <p>Report event results</p>
       </div>
     </div>
-
   </div>
 
   <script type="module">
-    import { auth, db } from './js/firebase-config.js';
-    import { signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+    import { auth, db } from './js/firebase-config.js';    import { signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
     import { doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-    // Load user data
     auth.onAuthStateChanged(async (user) => {
       if (user) {
-        try {
-          const userDoc = await getDoc(doc(db, "users", user.uid));
-          if (userDoc.exists()) {
-            const data = userDoc.data();
-            document.getElementById('userEmail').textContent = user.email;
-            document.getElementById('userAlliance').textContent = data.allianceId || 'N/A';
-            document.getElementById('userIgn').textContent = data.inGameName || 'Not set';
-            document.getElementById('userRank').textContent = `${data.role} - ${getRoleName(data.role)}`;
-            document.getElementById('userStatus').textContent = data.status === 'verified' ? '✅ Verified' : '⏳ Pending Verification';
-          } else {
-            console.error('No user data found');
-          }
-        } catch (error) {          console.error('Error loading user data:', error);
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          document.getElementById('userEmail').textContent = user.email;
+          document.getElementById('userAlliance').textContent = data.allianceId || 'N/A';
+          document.getElementById('userIgn').textContent = data.inGameName || 'Not set';
+          document.getElementById('userRank').textContent = data.role + ' - ' + getRoleName(data.role);
+          document.getElementById('userStatus').textContent = data.status === 'verified' ? '✅ Verified' : '⏳ Pending Verification';
         }
       } else {
         window.location.href = 'login.html';
       }
     });
 
-    // Get role name
     function getRoleName(role) {
-      const roles = {
-        'R0': 'Enrollment',
-        'R1': 'Recruit',
-        'R2': 'Member',
-        'R3': 'Veteran',
-        'R4': 'Officer',
-        'R5': 'Leader'
-      };
+      const roles = { 'R0': 'Enrollment', 'R1': 'Recruit', 'R2': 'Member', 'R3': 'Veteran', 'R4': 'Officer', 'R5': 'Leader' };
       return roles[role] || role;
     }
 
-    // Logout function
-    window.logout = function() {
-      signOut(auth).then(() => {
-        window.location.href = 'index.html';
-      }).catch((error) => {
-        alert('Error logging out: ' + error.message);
-      });
-    };
+    window.logout = () => { signOut(auth).then(() => window.location.href = 'index.html'); };
   </script>
 
 </body>
